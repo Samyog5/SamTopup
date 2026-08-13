@@ -51,8 +51,8 @@ async function main() {
   const groupEntity = targetDialog.entity;
   console.log(`✅ Resolved group "${targetDialog.title || config.targetGroup}" (ID: ${groupEntity.id})`);
 
-  // Resolve input peer entity for GramJS NewMessage event filter
-  const inputPeer = await client.getInputEntity(groupEntity);
+  // Use numeric entity ID derived from target group for GramJS NewMessage event filter
+  const targetChatId = groupEntity.id;
 
   console.log("\nListening for incoming messages in group...");
 
@@ -86,7 +86,7 @@ async function main() {
         console.log("ℹ️ Message does not contain supplier topup response signals. Skipped.");
       }
     },
-    new NewMessage({ chats: [inputPeer] })
+    new NewMessage({ chats: [targetChatId] })
   );
 
   console.log("Worker is active and listening. Press Ctrl+C to stop.");

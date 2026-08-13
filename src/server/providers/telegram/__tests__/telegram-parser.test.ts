@@ -273,17 +273,11 @@ Delivered`;
 });
 
 describe("Telegram GramJS Event Filtering", () => {
-  it("accepts resolved InputPeer objects in NewMessage chats filter without throwing", async () => {
+  it("accepts numeric chat IDs derived from group entity in NewMessage chats filter without throwing", async () => {
     const { NewMessage } = await import("telegram/events");
-    const fakeInputPeer = {
-      CONSTRUCTOR_ID: 900291769,
-      SUBCLASS_OF_ID: 3374092470,
-      className: "InputPeerChat",
-      classType: "constructor",
-      chatId: BigInt("5499983034"),
-    };
+    const numericChatId = BigInt("5499983034");
 
-    const filter = new NewMessage({ chats: [fakeInputPeer as any] });
+    const filter = new NewMessage({ chats: [numericChatId as any] });
     expect(filter).toBeDefined();
     expect(filter.chats).toBeDefined();
     expect(filter.chats?.length).toBe(1);

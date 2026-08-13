@@ -106,7 +106,7 @@ async function main() {
   const groupId = groupEntity.id.toString();
   console.log(`Resolved Group: "${targetDialog.title || config.targetGroup}" (ID: ${groupId})`);
 
-  const inputPeer = await client.getInputEntity(groupEntity);
+  const targetChatId = groupEntity.id;
 
   let correlationResult: CorrelationResult | null = null;
   let rawSupplierMessageText = "";
@@ -137,7 +137,7 @@ async function main() {
         responseReceived = true;
       }
     },
-    new NewMessage({ chats: [inputPeer] })
+    new NewMessage({ chats: [targetChatId] })
   );
 
   // 6. Send EXACTLY ONE command
