@@ -1,0 +1,254 @@
+// SamTopup — Free Fire Bangladesh Top-Up Platform
+// Prisma Schema — MVP Foundation & Product Catalogue
+//
+// All monetary values stored as Int in paisa (1 NPR = 100 paisa)
+// to prevent floating-point arithmetic errors.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+  MANUAL_REVIEW
+}
+
+enum WalletTransactionType {
+  CREDIT
+  DEBIT
+  REFUND
+  ADJUSTMENT
+}
+
+enum GameCode {
+  FREE_FIRE_BD
+}
+
+enum ProductType {
+  DIAMONDS
+  MEMBERSHIP
+}
+
+enum ProviderType {
+  TELEGRAM
+  UNIPIN
+  MANUAL
+}
+
+// ─── Auth.js Required Models ─────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String? // Hashed password for credentials auth; null for OAuth-only users
+  role          UserRole  @default(USER)
+
+  accounts Account[]
+  sessions Session[]
+
+  wallet Wallet?
+  orders Order[]
+
+  adminWalletTransactions WalletTransaction[] @relation("AdminWalletTransactions")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([role])
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+// ─── Wallet ──────────────────────────────────────────────────────────────────
+
+model Wallet {
+  id      String @id @default(cuid())
+  userId  String @unique
+  balance Int    @default(0) // Balance in paisa (NPR smallest unit)
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions WalletTransaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WalletTransaction {
+  id             String                @id @default(cuid())
+  walletId       String
+  type           WalletTransactionType
+  amount         Int // Amount in paisa (always positive)
+  balanceBefore  Int // Balance before transaction, in paisa
+  balanceAfter   Int // Balance after transaction, in paisa
+  reference      String? // External reference (e.g., order ID)
+  description    String?
+  idempotencyKey String?               @unique
+  adminId        String?
+
+  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  admin  User?   @relation("AdminWalletTransactions", fields: [adminId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([walletId])
+  @@index([adminId])
+  @@index([createdAt])
+  @@index([type])
+}
+
+// ─── Products ────────────────────────────────────────────────────────────────
+
+model Product {
+  id                String      @id @default(cuid())
+  name              String
+  description       String?
+  game              GameCode    @default(FREE_FIRE_BD)
+  type              ProductType
+  amount            Int? // Diamond count if type === DIAMONDS; null for MEMBERSHIP
+  sellingPricePaisa Int // Price in paisa (1 NPR = 100 paisa)
+  supplierCostPaisa Int? // Private internal supplier cost in paisa
+  supplierCommand   String // Command template, e.g., "bduc {uid} 115"
+  active            Boolean     @default(true)
+  sortOrder         Int         @default(0)
+
+  orders Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active])
+  @@index([game])
+  @@index([type])
+  @@index([sortOrder])
+}
+
+// ─── Orders ──────────────────────────────────────────────────────────────────
+
+model Order {
+  id                      String        @id @default(cuid())
+  orderNumber             String        @unique @default(cuid()) // Human-friendly unique ID (e.g. ST-20260813-98412)
+  userId                  String
+  productId               String
+  game                    GameCode      @default(FREE_FIRE_BD)
+  productNameSnapshot     String        // Snapshots product.name at purchase time
+  productTypeSnapshot     ProductType   // Snapshots product.type at purchase time
+  productAmountSnapshot   Int?          // Snapshots product.amount at purchase time
+  sellingPricePaisa       Int           // Price in paisa at time of purchase
+  supplierCostPaisa       Int?          // Private supplier cost snapshot in paisa
+  supplierCommandSnapshot String?       // Command template snapshot
+  freeFireUid             String        // Free Fire Player UID entered by user
+  gamePlayerName          String?       // Captured Free Fire in-game player name from supplier response
+  status                  OrderStatus   @default(PROCESSING)
+  supplierOrderId         String?       // Provider/Supplier reference ID
+  providerData            String?       // JSON stringified provider response
+  idempotencyKey          String?       @unique
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product      Product      @relation(fields: [productId], references: [id])
+  events       OrderEvent[]
+  providerLogs ProviderLog[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+
+  @@index([userId])
+  @@index([productId])
+  @@index([orderNumber])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderEvent {
+  id          String      @id @default(cuid())
+  orderId     String
+  fromStatus  OrderStatus?
+  toStatus    OrderStatus
+  note        String?
+  triggeredBy String? // User ID or "SYSTEM"
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([createdAt])
+}
+
+// ─── Provider Logs ───────────────────────────────────────────────────────────
+
+model ProviderLog {
+  id           String       @id @default(cuid())
+  orderId      String?
+  providerType ProviderType
+  request      String? // JSON stringified request sent
+  response     String? // JSON stringified response received
+  success      Boolean?
+  errorMessage String?
+
+  order Order? @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([providerType])
+  @@index([createdAt])
+}
