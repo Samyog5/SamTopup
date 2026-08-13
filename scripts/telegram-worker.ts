@@ -3,6 +3,7 @@ import { NewMessage } from "telegram/events";
 import { getTelegramConfig, createTelegramClient } from "../src/server/providers/telegram/client";
 import { parseSupplierResponse } from "../src/server/providers/telegram/parser";
 import { correlateAndFulfillOrder } from "../src/server/providers/telegram/correlator";
+import { processOutboundQueue } from "../src/server/providers/telegram/outbound-queue";
 
 dotenv.config();
 
@@ -12,7 +13,7 @@ dotenv.config();
  * Runs as a background process outside Vercel.
  * Connects to Telegram using GramJS with TELEGRAM_SESSION, listens to incoming
  * reseller messages in group "SR2298 Nepal", parses supplier responses,
- * and updates order states in PostgreSQL.
+ * updates order states in PostgreSQL, and dispatches outbound orders.
  *
  * Usage:
  * npx tsx scripts/telegram-worker.ts
@@ -89,7 +90,40 @@ async function main() {
     new NewMessage({ chats: [targetChatId] })
   );
 
+  // Start Outbound Telegram Dispatch Polling Queue
+  const autoFulfill = process.env.TELEGRAM_AUTO_FULFILLMENT_ENABLED === "true";
+  console.log(`Outbound Fulfillment Queue initialized (TELEGRAM_AUTO_FULFILLMENT_ENABLED=${autoFulfill})`);
+
+  let isPolling = false;
+  const pollInterval = setInterval(async () => {
+    if (isPolling) return;
+    isPolling = true;
+    try {
+      await processOutboundQueue({ client, targetGroup: groupEntity });
+    } catch (err) {
+      console.error("❌ Error in outbound queue poll iteration:", err);
+    } finally {
+      isPolling = false;
+    }
+  }, 3000);
+
+  // Clean shutdown handlers
+  const cleanup = async () => {
+    console.log("\nStopping worker...");
+    clearInterval(pollInterval);
+    try {
+      await client.disconnect();
+    } catch {
+      // ignore
+    }
+    process.exit(0);
+  };
+
+  process.on("SIGINT", cleanup);
+  process.on("SIGTERM", cleanup);
+
   console.log("Worker is active and listening. Press Ctrl+C to stop.");
 }
 
 main().catch(console.error);
+

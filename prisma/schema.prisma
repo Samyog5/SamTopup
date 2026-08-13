@@ -236,13 +236,14 @@ model OrderEvent {
 // ─── Provider Logs ───────────────────────────────────────────────────────────
 
 model ProviderLog {
-  id           String       @id @default(cuid())
-  orderId      String?
-  providerType ProviderType
-  request      String? // JSON stringified request sent
-  response     String? // JSON stringified response received
-  success      Boolean?
-  errorMessage String?
+  id             String       @id @default(cuid())
+  orderId        String?
+  providerType   ProviderType
+  idempotencyKey String?      @unique
+  request        String? // JSON stringified request sent
+  response       String? // JSON stringified response received
+  success        Boolean?
+  errorMessage   String?
 
   order Order? @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
