@@ -114,7 +114,7 @@ export default function CustomerOrderDetailPage({
               ) : order.status === "PROCESSING" ? (
                 <div>
                   <span className="text-xs text-muted-foreground block font-medium">Player Name</span>
-                  <span className="text-muted-foreground text-xs italic block mt-0.5">Will be available after successful top-up.</span>
+                  <span className="text-muted-foreground text-xs italic block mt-0.5">Player name will be available after successful top-up.</span>
                 </div>
               ) : null}
               <div>

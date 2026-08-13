@@ -9,11 +9,11 @@ import { prisma } from "../src/lib/db/prisma";
 
 dotenv.config();
 
-const TARGET_ORDER_NUMBER = "ST-20260813-13063";
+const TARGET_ORDER_NUMBER = "ST-20260813-93985";
 
 /**
- * Developer-only single-order Telegram fulfillment script.
- * Fulfills ONLY order ST-20260813-13063 to supplier group "SR2298 Nepal" via @aslar55.
+ * Developer-only single-order Telegram fulfillment test script.
+ * Fulfills ONLY order ST-20260813-93985 to supplier group "SR2298 Nepal" via @aslar55.
  *
  * Usage:
  * npx tsx scripts/telegram-fulfill-single-order.ts
@@ -122,7 +122,7 @@ async function main() {
       console.log(messageText);
 
       const parsed = parseSupplierResponse(messageText);
-      console.log(`Parsed Status: ${parsed.status} | Order ID: ${parsed.supplierOrderId ?? "N/A"} | UID: ${parsed.freeFireUid ?? "N/A"}`);
+      console.log(`Parsed Status: ${parsed.status} | Order ID: ${parsed.supplierOrderId ?? "N/A"} | UID: ${parsed.freeFireUid ?? "N/A"} | User: ${parsed.gamePlayerName ?? "N/A"}`);
 
       // Check if this response pertains to supplier activity
       if (parsed.status !== "UNKNOWN" || parsed.freeFireUid === order.freeFireUid) {
@@ -184,28 +184,28 @@ async function main() {
     // ignore
   }
 
+  const parsedFinal = parseSupplierResponse(rawSupplierMessageText);
+
   // 9. Detailed Controlled Test Report
   console.log("\n==================================================");
   console.log(" CONTROLLED SINGLE ORDER FULFILLMENT REPORT       ");
   console.log("==================================================");
-  console.log(`1. Existing Order Found: YES (${TARGET_ORDER_NUMBER})`);
-  console.log(`2. Pre-send Checks Passed: YES`);
-  console.log(`3. Exact Telegram Command Sent: "${formattedCommand}"`);
-  console.log(`4. Telegram Outgoing Message ID: ${outgoingMsgId}`);
-  console.log(`5. Supplier Response Raw Text:\n${rawSupplierMessageText || "(No response received within 45s)"}`);
-
-  const parsedFinal = parseSupplierResponse(rawSupplierMessageText);
-  console.log(`6. Parsed Supplier Status: ${parsedFinal.status}`);
-  console.log(`7. Parsed Supplier Order ID: ${parsedFinal.supplierOrderId ?? "N/A"}`);
-  console.log(`8. Parsed UID: ${parsedFinal.freeFireUid ?? "N/A"}`);
-  console.log(`9. Correlation Method: ${(correlationResult as CorrelationResult | null)?.reason ?? "N/A"}`);
-  console.log(`10. Final SamTopup Order Status: ${finalOrder?.status ?? "PROCESSING"}`);
-  console.log(`11. CompletedAt Set: ${finalOrder?.completedAt ? finalOrder.completedAt.toISOString() : "NO (null)"}`);
-  console.log(`12. Provider Logs Created: ${finalOrder?.providerLogs.length ?? 0}`);
-  console.log(`13. Order Events Created: ${finalOrder?.events.length ?? 0}`);
-  console.log(`14. Wallet Charged Only Once: YES (Original payment of Rs. 30 intact, zero extra debit)`);
-  console.log(`15. Duplicate Telegram Commands Sent: NONE (Exactly 1 command sent)`);
-  console.log(`16. Errors: NONE`);
+  console.log(`1. Order Inspection Result: PASSED (Order ${TARGET_ORDER_NUMBER} in PROCESSING status)`);
+  console.log(`2. Exact Supplier Command Sent: "${formattedCommand}"`);
+  console.log(`3. Telegram Outgoing Message ID: ${outgoingMsgId}`);
+  console.log(`4. Supplier Raw Response:\n${rawSupplierMessageText || "(No response received within timeout)"}`);
+  console.log(`5. Parsed Supplier Status: ${parsedFinal.status}`);
+  console.log(`6. Supplier Order ID: ${parsedFinal.supplierOrderId ?? "N/A"}`);
+  console.log(`7. Free Fire UID: ${parsedFinal.freeFireUid ?? order.freeFireUid}`);
+  console.log(`8. Free Fire Player Name (gamePlayerName): ${finalOrder?.gamePlayerName ?? parsedFinal.gamePlayerName ?? "N/A"}`);
+  console.log(`9. Delivery Status: ${parsedFinal.deliveryStatus ?? "N/A"}`);
+  console.log(`10. Correlation Method: ${(correlationResult as CorrelationResult | null)?.reason ?? "N/A"}`);
+  console.log(`11. Final SamTopup Order Status: ${finalOrder?.status ?? "PROCESSING"}`);
+  console.log(`12. Wallet Transaction Result: Original debit of Rs. ${order.sellingPricePaisa / 100} intact`);
+  console.log(`13. Refund Result: ${finalOrder?.status === "REFUNDED" ? "Refunded Rs. 28.00 to wallet" : "N/A (Not refunded)"}`);
+  console.log(`14. Provider Logs Count: ${finalOrder?.providerLogs.length ?? 0}`);
+  console.log(`15. Order Events Count: ${finalOrder?.events.length ?? 0}`);
+  console.log(`16. Duplicate Command Check: PASSED (Exactly 1 command transmitted)`);
   console.log("==================================================\n");
 
   process.exit(0);

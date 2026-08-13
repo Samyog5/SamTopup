@@ -111,7 +111,12 @@ export default function CustomerOrdersPage() {
                         {o.productNameSnapshot}
                       </td>
                       <td className="px-4 py-3 font-mono text-muted-foreground">
-                        {o.freeFireUid}
+                        <div>{o.freeFireUid}</div>
+                        {o.gamePlayerName && (
+                          <div className="text-[11px] font-sans font-semibold text-emerald-600 dark:text-emerald-400">
+                            {o.gamePlayerName}
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400">
                         {o.priceFormatted}

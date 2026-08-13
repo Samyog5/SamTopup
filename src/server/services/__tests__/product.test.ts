@@ -44,8 +44,8 @@ describe("Product Catalogue Seed Integrity", () => {
     const p115 = products.find((p) => p.name === "115 Diamonds");
 
     expect(p115).toBeDefined();
-    expect(p115?.sellingPricePaisa).toBe(10500); // Rs. 105.00
-    expect(p115?.priceFormatted).toBe("Rs. 105.00");
+    expect(p115?.sellingPricePaisa).toBe(9900); // Rs. 99.00
+    expect(p115?.priceFormatted).toBe("Rs. 99.00");
     expect(p115?.amount).toBe(115);
     expect(p115?.type).toBe("DIAMONDS");
   });

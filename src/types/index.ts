@@ -111,7 +111,7 @@ export interface CustomerOrderDisplay {
   productTypeSnapshot: ProductType;
   productAmountSnapshot: number | null;
   freeFireUid: string;
-  gamePlayerName?: string | null;
+  gamePlayerName: string | null;
   sellingPricePaisa: Paisa;
   priceFormatted: string;
   status: OrderStatusType;
