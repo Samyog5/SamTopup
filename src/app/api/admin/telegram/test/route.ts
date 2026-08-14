@@ -3,7 +3,6 @@ import { auth } from "@/auth";
 import { getTelegramConfig } from "@/server/providers/telegram/client";
 import { parseSupplierResponse } from "@/server/providers/telegram/parser";
 import { formatSupplierCommand } from "@/server/providers/telegram/formatter";
-import { telegramProvider } from "@/server/providers/telegram/provider";
 import { prisma } from "@/lib/db/prisma";
 
 export async function GET() {
@@ -68,33 +67,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "FORMAT_TEST") {
-      const template = body.template ?? "bduc {uid} 115";
-      const uid = body.freeFireUid ?? "3125514892";
+      const template = body.template ?? "test_template {uid}";
+      const uid = body.freeFireUid ?? "0000000000";
       const formatted = formatSupplierCommand(template, uid);
       return NextResponse.json({ success: true, data: { formatted } });
-    }
-
-    if (action === "SEND_DEV_TEST") {
-      const config = getTelegramConfig();
-      if (!config) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Telegram credentials not configured in environment variables (TELEGRAM_API_ID / TELEGRAM_SESSION).",
-          },
-          { status: 400 }
-        );
-      }
-
-      const result = await telegramProvider.sendTopup({
-        orderId: "",
-        gameUid: "3125514892",
-        productSku: "bduc {uid} test",
-        productName: "Developer Integration Test",
-        quantity: 1,
-      });
-
-      return NextResponse.json({ success: true, data: result });
     }
 
     return NextResponse.json(

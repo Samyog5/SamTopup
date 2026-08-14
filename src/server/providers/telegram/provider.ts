@@ -23,95 +23,17 @@ export class TelegramTopupProvider implements TopupProvider {
   }
 
   /**
-   * Send a top-up request to the reseller group "SR2298 Nepal" via GramJS MTProto client.
-   * Logs outbound ProviderLog entry.
+   * Direct manual sendTopup is disabled.
+   * Outbound fulfillment MUST be processed exclusively via the database-backed
+   * queue `processOutboundQueue` in outbound-queue.ts.
    */
-  async sendTopup(request: TopupRequest): Promise<TopupResult> {
-    const config = getTelegramConfig();
-
-    if (!config) {
-      const errorMsg = "Telegram provider credentials (TELEGRAM_API_ID / TELEGRAM_SESSION) are not configured.";
-      // Audit log attempt
-      if (request.orderId) {
-        await prisma.providerLog.create({
-          data: {
-            orderId: request.orderId,
-            providerType: "TELEGRAM",
-            request: JSON.stringify(request),
-            success: false,
-            errorMessage: errorMsg,
-          },
-        });
-      }
-
-      return {
-        success: false,
-        message: errorMsg,
-      };
-    }
-
-    const formattedCommand = formatSupplierCommand(request.productSku, request.gameUid);
-    const client = createTelegramClient(config);
-
-    try {
-      await client.connect();
-
-      const sentMsg = await client.sendMessage(config.targetGroup, {
-        message: formattedCommand,
-      });
-
-      const providerRef = sentMsg.id ? sentMsg.id.toString() : `msg_${Date.now()}`;
-
-      // Log success outbound attempt in ProviderLog
-      if (request.orderId) {
-        await prisma.providerLog.create({
-          data: {
-            orderId: request.orderId,
-            providerType: "TELEGRAM",
-            request: JSON.stringify({
-              formattedCommand,
-              targetGroup: config.targetGroup,
-              telegramMessageId: sentMsg.id,
-            }),
-            success: true,
-          },
-        });
-      }
-
-      await client.disconnect();
-
-      return {
-        success: true,
-        providerReference: providerRef,
-        message: `Command sent to ${config.targetGroup}: ${formattedCommand}`,
-        rawResponse: JSON.stringify({ messageId: sentMsg.id, command: formattedCommand }),
-      };
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to send Telegram message";
-
-      if (request.orderId) {
-        await prisma.providerLog.create({
-          data: {
-            orderId: request.orderId,
-            providerType: "TELEGRAM",
-            request: JSON.stringify({ formattedCommand, targetGroup: config.targetGroup }),
-            success: false,
-            errorMessage,
-          },
-        });
-      }
-
-      try {
-        await client.disconnect();
-      } catch {
-        // ignore disconnect errors
-      }
-
-      return {
-        success: false,
-        message: errorMessage,
-      };
-    }
+  async sendTopup(_request: TopupRequest): Promise<TopupResult> {
+    const errorMsg = "Direct manual sendTopup is disabled. Outbound fulfillment is strictly handled via processOutboundQueue() for legitimate PROCESSING orders.";
+    console.warn(`[TelegramProvider] ${errorMsg}`);
+    return {
+      success: false,
+      message: errorMsg,
+    };
   }
 
   /**

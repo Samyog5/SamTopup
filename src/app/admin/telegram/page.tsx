@@ -40,11 +40,9 @@ export default function AdminTelegramPage() {
   const [parsedResult, setParsedResult] = useState<ParsedSupplierMessage | null>(null);
 
   // Formatter tester state
-  const [cmdTemplate, setCmdTemplate] = useState("bduc {uid} 115");
+  const [cmdTemplate, setCmdTemplate] = useState("test_template {uid}");
   const [testUid, setTestUid] = useState("3125514892");
   const [formattedCmd, setFormattedCmd] = useState("");
-
-  const [isSendingTest, setIsSendingTest] = useState(false);
 
   const fetchStatus = useCallback(async () => {
     setIsLoading(true);
@@ -111,29 +109,6 @@ export default function AdminTelegramPage() {
     }
   }
 
-  // Handle send dev test
-  async function handleSendDevTest() {
-    setIsSendingTest(true);
-    try {
-      const res = await fetch("/api/admin/telegram/test", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "SEND_DEV_TEST" }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        toast.error(json.error ?? "Test message failed");
-      } else {
-        toast.success(json.data.message ?? "Test message sent to Telegram group!");
-        fetchStatus();
-      }
-    } catch {
-      toast.error("Network error sending test message");
-    } finally {
-      setIsSendingTest(false);
-    }
-  }
-
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -155,7 +130,7 @@ export default function AdminTelegramPage() {
       ) : (
         <>
           {/* Status & Configuration Cards */}
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2">
             <Card className="border-border/50">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -196,27 +171,6 @@ export default function AdminTelegramPage() {
                 </p>
               </CardContent>
             </Card>
-
-            <Card className="border-border/50">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Safe Integration Test
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Button
-                  onClick={handleSendDevTest}
-                  disabled={isSendingTest || !data?.configured}
-                  size="sm"
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-                >
-                  {isSendingTest ? "Sending..." : "Send Developer Test Text"}
-                </Button>
-                <p className="text-[11px] text-muted-foreground">
-                  Sends a safe developer text to {data?.targetGroup} without triggering paid top-ups.
-                </p>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Interactive Tools Grid */}
@@ -237,7 +191,7 @@ export default function AdminTelegramPage() {
                   <Input
                     value={cmdTemplate}
                     onChange={(e) => setCmdTemplate(e.target.value)}
-                    placeholder="e.g. bduc {uid} 115"
+                    placeholder="e.g. test_template {uid}"
                   />
                 </div>
                 <div className="space-y-2">

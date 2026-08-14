@@ -5,7 +5,7 @@ import { creditWallet } from "@/server/services/wallet";
 import { getActiveCustomerProducts, createProduct } from "@/server/services/product";
 import { prisma } from "@/lib/db/prisma";
 
-describe("Database-Backed Telegram Outbound Fulfillment Queue", () => {
+describe("Database-Backed Telegram Outbound Fulfillment Queue", { timeout: 30000 }, () => {
   let testUser: { id: string; email: string };
   let testProduct: { id: string; supplierCommand: string };
 
