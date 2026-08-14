@@ -70,23 +70,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-  callbacks: {
-    ...authConfig.callbacks,
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id as string;
-        token.role = (user.role as UserRole) ?? "USER";
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id;
-        session.user.role = token.role;
-      }
-      return session;
-    },
-  },
+  callbacks: authConfig.callbacks,
   events: {
     async createUser({ user }) {
       // Create a wallet for OAuth users who are created via the adapter
