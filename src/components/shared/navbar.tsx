@@ -21,6 +21,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import Image from "next/image";
 import { APP_NAME, NAV_LINKS } from "@/config/constants";
 import { cn } from "@/lib/utils";
 
@@ -60,9 +61,14 @@ export function Navbar() {
           href="/"
           className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 shadow-sm">
-            <span className="text-sm font-bold text-white">S</span>
-          </div>
+          <Image
+            src="/images/logo.png"
+            alt={`${APP_NAME} Logo`}
+            width={32}
+            height={32}
+            className="h-8 w-8 rounded-lg object-contain shadow-sm border border-emerald-500/20 bg-background/50"
+            priority
+          />
           <span className="text-lg font-bold tracking-tight">{APP_NAME}</span>
         </Link>
 
@@ -186,7 +192,16 @@ export function Navbar() {
           </SheetTrigger>
           <SheetContent side="right" className="w-72">
             <SheetHeader>
-              <SheetTitle className="text-left">{APP_NAME}</SheetTitle>
+              <SheetTitle className="text-left flex items-center gap-2">
+                <Image
+                  src="/images/logo.png"
+                  alt={`${APP_NAME} Logo`}
+                  width={28}
+                  height={28}
+                  className="h-7 w-7 rounded-md object-contain border border-emerald-500/20 bg-background/50"
+                />
+                <span>{APP_NAME}</span>
+              </SheetTitle>
             </SheetHeader>
             <nav className="mt-6 flex flex-col gap-1">
               {NAV_LINKS.map((link) => {

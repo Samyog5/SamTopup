@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { APP_NAME } from "@/config/constants";
 
 export const metadata: Metadata = {
@@ -17,9 +18,14 @@ export default function AuthLayout({
       <header className="border-b border-border/50 bg-background/80 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-7xl items-center px-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600">
-              <span className="text-xs font-bold text-white">S</span>
-            </div>
+            <Image
+              src="/images/logo.png"
+              alt={`${APP_NAME} Logo`}
+              width={28}
+              height={28}
+              className="h-7 w-7 rounded-md object-contain border border-emerald-500/20 bg-background/50"
+              priority
+            />
             <span className="text-base font-bold">{APP_NAME}</span>
           </Link>
         </div>

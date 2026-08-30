@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -86,7 +87,17 @@ export function RegisterForm() {
 
   return (
     <Card className="w-full max-w-md border-border/50 shadow-xl backdrop-blur-sm">
-      <CardHeader className="text-center">
+      <CardHeader className="text-center flex flex-col items-center">
+        <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-background p-1.5 shadow-md border border-emerald-500/20">
+          <Image
+            src="/images/logo.png"
+            alt="SamTopup"
+            width={48}
+            height={48}
+            className="h-full w-full object-contain"
+            priority
+          />
+        </div>
         <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
         <CardDescription>
           Get started with SamTopup today

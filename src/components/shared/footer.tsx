@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { APP_NAME } from "@/config/constants";
 
 export function Footer() {
@@ -11,9 +12,13 @@ export function Footer() {
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2.5">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600">
-                <span className="text-xs font-bold text-white">S</span>
-              </div>
+              <Image
+                src="/images/logo.png"
+                alt={`${APP_NAME} Logo`}
+                width={28}
+                height={28}
+                className="h-7 w-7 rounded-md object-contain border border-emerald-500/20 bg-background/50"
+              />
               <span className="text-base font-bold">{APP_NAME}</span>
             </Link>
             <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
