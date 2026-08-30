@@ -22,6 +22,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import Image from "next/image";
+import { AddMoneyModal } from "@/components/shared/add-money-modal";
 import { APP_NAME, NAV_LINKS } from "@/config/constants";
 import { cn } from "@/lib/utils";
 
@@ -49,6 +50,7 @@ export function Navbar() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isAddMoneyOpen, setIsAddMoneyOpen] = useState(false);
 
   const isLoggedIn = status === "authenticated";
   const user = session?.user;
@@ -92,6 +94,15 @@ export function Navbar() {
               </Link>
             );
           })}
+
+          {/* Add Money Navbar Button */}
+          <button
+            type="button"
+            onClick={() => setIsAddMoneyOpen(true)}
+            className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-extrabold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-all shadow-sm"
+          >
+            <span>💬</span> Add Money
+          </button>
         </nav>
 
         {/* Desktop Auth */}
@@ -128,6 +139,9 @@ export function Navbar() {
                   </div>
                 </div>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setIsAddMoneyOpen(true)} className="text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer">
+                  💬 Add Money via WhatsApp
+                </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Link href="/dashboard" className="w-full">
                     Dashboard
@@ -224,6 +238,17 @@ export function Navbar() {
                 );
               })}
 
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false);
+                  setIsAddMoneyOpen(true);
+                }}
+                className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors"
+              >
+                <span>💬</span> Add Money (WhatsApp)
+              </button>
+
               <div className="my-3 h-px bg-border" />
 
               {isLoggedIn && user ? (
@@ -304,6 +329,12 @@ export function Navbar() {
           </SheetContent>
         </Sheet>
       </div>
+
+      {/* Render Reusable AddMoneyModal */}
+      <AddMoneyModal
+        isOpen={isAddMoneyOpen}
+        onOpenChange={setIsAddMoneyOpen}
+      />
     </header>
   );
 }

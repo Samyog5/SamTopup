@@ -2,6 +2,7 @@
 
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "SamTopup";
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+export const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "9779813218728";
 
 // ─── Currency ────────────────────────────────────────────────────────────────
 

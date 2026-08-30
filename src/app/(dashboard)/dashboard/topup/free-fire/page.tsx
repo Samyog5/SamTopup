@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Loading } from "@/components/shared/loading";
 import { ErrorDisplay } from "@/components/shared/error-display";
+import { AddMoneyModal } from "@/components/shared/add-money-modal";
 import { GAMES, APP_NAME } from "@/config/constants";
 import { gameUidSchema } from "@/lib/validation";
 import { formatNPR } from "@/lib/money";
@@ -44,6 +45,7 @@ export default function FreeFireTopupPage() {
   const [isPaying, setIsPaying] = useState(false);
   const [paidOrder, setPaidOrder] = useState<CustomerOrderDisplay | null>(null);
   const [idempotencyKey, setIdempotencyKey] = useState("");
+  const [isAddMoneyOpen, setIsAddMoneyOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -596,12 +598,13 @@ export default function FreeFireTopupPage() {
                     <p className="text-[11px] font-normal">
                       You need <strong>{formatNPR(productPricePaisa - userBalancePaisa)}</strong> more in your wallet.
                     </p>
-                    <Link
-                      href="/dashboard/wallet"
-                      className="text-xs font-bold underline hover:text-destructive/80 transition-colors inline-block"
+                    <button
+                      type="button"
+                      onClick={() => setIsAddMoneyOpen(true)}
+                      className="text-xs font-bold underline hover:text-destructive/80 transition-colors text-left"
                     >
-                      + Top Up Wallet Now →
-                    </Link>
+                      + Add Money via WhatsApp →
+                    </button>
                   </div>
                 )}
               </div>
@@ -790,6 +793,17 @@ export default function FreeFireTopupPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Render AddMoneyModal */}
+      <AddMoneyModal
+        isOpen={isAddMoneyOpen}
+        onOpenChange={setIsAddMoneyOpen}
+        initialAmount={
+          selectedProduct && productPricePaisa > userBalancePaisa
+            ? String(Math.ceil((productPricePaisa - userBalancePaisa) / 100))
+            : "500"
+        }
+      />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/shared/loading";
 import { ErrorDisplay } from "@/components/shared/error-display";
+import { AddMoneyModal } from "@/components/shared/add-money-modal";
 import { formatNPR } from "@/lib/money";
 import type { WalletBalance, WalletTransactionDisplay, PaginatedResult } from "@/types";
 
@@ -16,6 +17,7 @@ export default function UserWalletPage() {
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAddMoneyOpen, setIsAddMoneyOpen] = useState(false);
 
   const fetchWalletData = useCallback(async () => {
     setIsLoading(true);
@@ -64,16 +66,26 @@ export default function UserWalletPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">My Wallet</h1>
-        <p className="text-sm text-muted-foreground">
-          View your NPR wallet balance and transaction history
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">My Wallet</h1>
+          <p className="text-sm text-muted-foreground">
+            View your NPR wallet balance and transaction history
+          </p>
+        </div>
+
+        <Button
+          type="button"
+          onClick={() => setIsAddMoneyOpen(true)}
+          className="bg-[#25D366] hover:bg-[#20bd5a] text-slate-950 font-extrabold shadow-md flex items-center gap-2"
+        >
+          <span>💬</span> Add Money via WhatsApp
+        </Button>
       </div>
 
       {/* Balance Card */}
       <div className="grid gap-6 md:grid-cols-3">
-        <Card className="md:col-span-2 border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 via-card to-card shadow-sm">
+        <Card className="md:col-span-2 border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 via-card to-card shadow-sm flex flex-col justify-between">
           <CardHeader className="pb-2">
             <CardDescription className="text-xs uppercase font-semibold text-muted-foreground">
               Current Available Balance
@@ -82,10 +94,19 @@ export default function UserWalletPage() {
               {balance?.formatted ?? formatNPR(0)}
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-2">
+          <CardContent className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <p className="text-xs text-muted-foreground">
               All transactions are conducted strictly in Nepalese Rupees (NPR).
             </p>
+
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => setIsAddMoneyOpen(true)}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shrink-0"
+            >
+              + Add Balance
+            </Button>
           </CardContent>
         </Card>
 
@@ -99,13 +120,28 @@ export default function UserWalletPage() {
               Wallet Funding Info
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Wallet balance is currently added manually by administrators upon verification. Contact support or an administrator to request balance top-up.
+              Send your deposit amount and User ID directly to WhatsApp. Wallet balance is credited upon verification.
             </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsAddMoneyOpen(true)}
+              className="w-full text-xs font-bold text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
+            >
+              Request WhatsApp Deposit →
+            </Button>
           </CardContent>
         </Card>
       </div>
+
+      {/* Render AddMoneyModal */}
+      <AddMoneyModal
+        isOpen={isAddMoneyOpen}
+        onOpenChange={setIsAddMoneyOpen}
+      />
 
       {/* Transactions History */}
       <Card className="border-border/50">
