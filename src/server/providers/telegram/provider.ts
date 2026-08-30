@@ -1,7 +1,6 @@
 import type { TopupProvider, TopupRequest, TopupResult, TopupStatus } from "../topup-provider";
 import { formatSupplierCommand } from "./formatter";
 import { parseSupplierResponse } from "./parser";
-import { getTelegramConfig, createTelegramClient } from "./client";
 import { prisma } from "@/lib/db/prisma";
 
 export class TelegramTopupProvider implements TopupProvider {

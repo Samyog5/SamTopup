@@ -264,6 +264,24 @@ export async function getUserOrders(
 }
 
 /**
+ * Sanitizes internal order event notes for customer-facing API responses.
+ * Prevents exposing supplier commands, Telegram message IDs, UIDs, or internal error strings.
+ */
+export function sanitizeCustomerOrderNote(note: string | null): string | null {
+  if (!note) return note;
+
+  if (note.startsWith("Outbound supplier command sent to Telegram")) {
+    return "Outbound supplier command sent to Telegram";
+  }
+
+  if (note.startsWith("Outbound supplier command transmission failed")) {
+    return "Outbound supplier command transmission failed";
+  }
+
+  return note;
+}
+
+/**
  * Fetch a single order detail for a customer (user isolated).
  */
 export async function getUserOrderByNumber(
@@ -287,7 +305,7 @@ export async function getUserOrderByNumber(
     orderId: e.orderId,
     fromStatus: e.fromStatus,
     toStatus: e.toStatus,
-    note: e.note,
+    note: sanitizeCustomerOrderNote(e.note),
     triggeredBy: e.triggeredBy,
     createdAt: e.createdAt,
   }));

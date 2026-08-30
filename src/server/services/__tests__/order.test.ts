@@ -271,6 +271,64 @@ describe("Order & Wallet Payment System", () => {
     expect(result).toBeNull();
   });
 
+  it("sanitizes customer order event notes (pure function, no DB)", async () => {
+    // Import the pure function directly — no Prisma, no DB, no Telegram
+    const { sanitizeCustomerOrderNote } = await import("@/server/services/order");
+
+    // 1. Outbound command note with supplier command + Message ID: must strip details
+    expect(
+      sanitizeCustomerOrderNote(
+        "Outbound supplier command sent to Telegram: bduc 3125514892 50 (Message ID: 5880)"
+      )
+    ).toBe("Outbound supplier command sent to Telegram");
+
+    // 2. Outbound command note with different UID/product: must strip details
+    expect(
+      sanitizeCustomerOrderNote(
+        "Outbound supplier command sent to Telegram: bduc 9999999999 115 (Message ID: 12345)"
+      )
+    ).toBe("Outbound supplier command sent to Telegram");
+
+    // 3. Transmission failure note: must strip error details
+    expect(
+      sanitizeCustomerOrderNote(
+        "Outbound supplier command transmission failed: RPC_CALL_TIMEOUT"
+      )
+    ).toBe("Outbound supplier command transmission failed");
+
+    // 4. Transmission failure with different error: must strip
+    expect(
+      sanitizeCustomerOrderNote(
+        "Outbound supplier command transmission failed: NETWORK_ERROR: connection reset"
+      )
+    ).toBe("Outbound supplier command transmission failed");
+
+    // 5. Benign customer-facing note: must pass through unchanged
+    expect(
+      sanitizeCustomerOrderNote("Order created and paid via NPR Wallet")
+    ).toBe("Order created and paid via NPR Wallet");
+
+    // 6. null input: must return null
+    expect(sanitizeCustomerOrderNote(null)).toBeNull();
+
+    // 7. Empty string: must pass through unchanged
+    expect(sanitizeCustomerOrderNote("")).toBe("");
+
+    // 8. Generic status transition note: must pass through unchanged
+    expect(
+      sanitizeCustomerOrderNote("Verified supplier completion response (#6525). Delivered: Yes")
+    ).toBe("Verified supplier completion response (#6525). Delivered: Yes");
+
+    // 9. Verify sanitized output never leaks supplier command patterns
+    const sanitized = sanitizeCustomerOrderNote(
+      "Outbound supplier command sent to Telegram: bduc 3125514892 weekly (Message ID: 9999)"
+    );
+    expect(sanitized).not.toContain("bduc");
+    expect(sanitized).not.toContain("3125514892");
+    expect(sanitized).not.toContain("Message ID");
+    expect(sanitized).not.toContain("9999");
+  });
+
   describe("Automatic Order Refund Architecture & Idempotency", () => {
     it("refunds failed order atomically, creates CREDIT transaction, and sets status to REFUNDED", async () => {
       // 1. Fund user A with Rs. 200
