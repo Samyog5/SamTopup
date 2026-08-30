@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { buttonVariants } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -51,9 +51,23 @@ export function Navbar() {
   const { data: session, status } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isAddMoneyOpen, setIsAddMoneyOpen] = useState(false);
+  const [walletFormatted, setWalletFormatted] = useState<string | null>(null);
 
   const isLoggedIn = status === "authenticated";
   const user = session?.user;
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetch("/api/wallet/balance")
+        .then((res) => res.json())
+        .then((json) => {
+          if (json.success && json.data) {
+            setWalletFormatted(json.data.formatted);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isLoggedIn]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
@@ -101,7 +115,8 @@ export function Navbar() {
             onClick={() => setIsAddMoneyOpen(true)}
             className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-extrabold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-all shadow-sm"
           >
-            <span>💬</span> Add Money
+            <span className="rounded bg-emerald-500 text-white dark:bg-emerald-400 dark:text-slate-950 px-1 py-0.2 text-[10px] font-black leading-none">Rs.</span>
+            Add Money
           </button>
         </nav>
 
@@ -137,10 +152,17 @@ export function Navbar() {
                       </svg>
                     </button>
                   </div>
+                  <div className="flex items-center justify-between gap-1.5 rounded-md bg-emerald-500/10 px-2 py-1 text-[11px] font-semibold border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                    <span className="text-muted-foreground flex items-center gap-1 font-medium">
+                      <span>💰</span> Balance:
+                    </span>
+                    <span className="font-extrabold">{walletFormatted ?? "Loading..."}</span>
+                  </div>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setIsAddMoneyOpen(true)} className="text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer">
-                  💬 Add Money via WhatsApp
+                <DropdownMenuItem onClick={() => setIsAddMoneyOpen(true)} className="text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer flex items-center gap-2">
+                  <span className="rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1 text-[10px] font-black">Rs.</span>
+                  Add Money via WhatsApp
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Link href="/dashboard" className="w-full">
@@ -246,7 +268,8 @@ export function Navbar() {
                 }}
                 className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors"
               >
-                <span>💬</span> Add Money (WhatsApp)
+                <span className="rounded bg-emerald-500 text-white dark:bg-emerald-400 dark:text-slate-950 px-1.5 py-0.5 text-xs font-black">Rs.</span>
+                Add Money (WhatsApp)
               </button>
 
               <div className="my-3 h-px bg-border" />
@@ -276,6 +299,12 @@ export function Navbar() {
                           <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                         </svg>
                       </button>
+                    </div>
+                    <div className="flex items-center justify-between gap-1.5 rounded-md bg-emerald-500/10 px-2 py-1.5 text-xs font-semibold border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                      <span className="text-muted-foreground flex items-center gap-1 font-medium">
+                        <span>💰</span> Wallet Balance:
+                      </span>
+                      <span className="font-extrabold">{walletFormatted ?? "Loading..."}</span>
                     </div>
                   </div>
                   <Link

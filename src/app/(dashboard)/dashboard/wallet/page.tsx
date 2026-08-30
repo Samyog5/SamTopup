@@ -79,7 +79,7 @@ export default function UserWalletPage() {
           onClick={() => setIsAddMoneyOpen(true)}
           className="bg-[#25D366] hover:bg-[#20bd5a] text-slate-950 font-extrabold shadow-md flex items-center gap-2"
         >
-          <span>💬</span> Add Money via WhatsApp
+          <span className="rounded bg-slate-950 text-white dark:bg-slate-950 dark:text-emerald-400 px-1.5 py-0.5 text-xs font-black">Rs.</span> Add Money via WhatsApp
         </Button>
       </div>
 

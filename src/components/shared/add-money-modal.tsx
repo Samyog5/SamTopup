@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -31,14 +30,6 @@ export function AddMoneyModal({
   const loggedInUserId = session?.user?.id ?? "";
 
   const [amount, setAmount] = useState(initialAmount);
-  const [userId, setUserId] = useState(loggedInUserId);
-
-  // Sync userId when session loads or modal opens
-  useEffect(() => {
-    if (session?.user?.id) {
-      setUserId(session.user.id);
-    }
-  }, [session?.user?.id, isOpen]);
 
   useEffect(() => {
     if (isOpen && initialAmount) {
@@ -47,12 +38,10 @@ export function AddMoneyModal({
   }, [isOpen, initialAmount]);
 
   const presetAmounts = ["100", "500", "1000", "2000", "5000"];
-
   const cleanedAmount = amount.trim();
-  const cleanedUserId = userId.trim();
 
-  // Exact required format: "I need to add money <amount> and my user id is <user id>"
-  const formattedMessage = `I need to add money ${cleanedAmount || "<amount>"} and my user id is ${cleanedUserId || "<user id>"}`;
+  // Clean UI preview message shown to customer (User ID is hidden in UI)
+  const displayPreviewMessage = `I need to add money ${cleanedAmount || "<amount>"}`;
 
   function handleSendWhatsApp(e: React.FormEvent) {
     e.preventDefault();
@@ -62,17 +51,16 @@ export function AddMoneyModal({
       return;
     }
 
-    if (!cleanedUserId) {
-      toast.error("Please enter or verify your User ID");
-      return;
-    }
+    // Construct full message for WhatsApp (autofills user id in background if logged in)
+    const messageText = loggedInUserId
+      ? `I need to add money ${cleanedAmount} and my user id is ${loggedInUserId}`
+      : `I need to add money ${cleanedAmount}`;
 
     // Clean phone number for wa.me link (remove +, spaces, hyphens)
     const cleanPhone = WHATSAPP_NUMBER.replace(/[\s\+\-]/g, "");
-    const messageText = `I need to add money ${cleanedAmount} and my user id is ${cleanedUserId}`;
     const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(messageText)}`;
 
-    toast.success("Opening WhatsApp with your request...");
+    toast.success("Opening WhatsApp...");
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
     onOpenChange(false);
   }
@@ -82,13 +70,13 @@ export function AddMoneyModal({
       <DialogContent className="sm:max-w-md border-border/80 shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-extrabold flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-              💬
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black text-xs border border-emerald-500/20">
+              Rs.
             </span>
             Add Money to Wallet
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Enter the amount to add to your SamTopup NPR wallet. We will redirect you to WhatsApp with your pre-filled details.
+            Enter the amount you wish to add to your SamTopup NPR wallet and send your request via WhatsApp.
           </DialogDescription>
         </DialogHeader>
 
@@ -134,44 +122,15 @@ export function AddMoneyModal({
             </div>
           </div>
 
-          {/* User ID Field */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="add-money-userid" className="text-xs font-bold uppercase tracking-wider">
-                User ID *
-              </Label>
-              {loggedInUserId && (
-                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px] font-semibold">
-                  ✓ Autofilled
-                </Badge>
-              )}
-            </div>
-            <Input
-              id="add-money-userid"
-              type="text"
-              placeholder="e.g. user_id_or_email"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              className="h-10 text-xs font-mono font-medium"
-              required
-            />
-            {!loggedInUserId && (
-              <p className="text-[11px] text-muted-foreground">
-                Sign in to automatically link your account User ID, or enter your registered account ID above.
-              </p>
-            )}
-          </div>
-
-          {/* Live Message Preview Box */}
+          {/* Clean Message Preview Box (No technical user id in UI) */}
           <div className="rounded-xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 via-card to-card p-3.5 space-y-2 text-xs">
             <div className="flex items-center justify-between text-muted-foreground font-semibold text-[11px]">
               <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold">
-                <span>💬</span> WhatsApp Message Preview
+                <span className="rounded bg-emerald-500/20 px-1 text-[10px] font-black">Rs.</span> WhatsApp Message Preview
               </span>
-              <span>Pre-formatted</span>
             </div>
-            <div className="rounded-lg bg-background p-3 font-mono text-xs text-foreground border border-border/60 shadow-inner select-all break-all">
-              {formattedMessage}
+            <div className="rounded-lg bg-background p-3 font-mono text-xs text-foreground border border-border/60 shadow-inner select-all">
+              {displayPreviewMessage}
             </div>
           </div>
 
