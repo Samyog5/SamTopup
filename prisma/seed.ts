@@ -1,4 +1,5 @@
 import "dotenv/config";
+import bcrypt from "bcryptjs";
 import { prisma } from "../src/lib/db/prisma";
 
 export const INITIAL_PRODUCTS = [
@@ -112,6 +113,42 @@ export const INITIAL_PRODUCTS = [
   },
 ];
 
+export async function seedAdmin() {
+  console.log("Seeding Admin User...");
+  const adminEmail = "admin@samyog-budhathoki.com.np";
+  const hashedPassword = await bcrypt.hash("Password@123", 12);
+
+  const existing = await prisma.user.findUnique({
+    where: { email: adminEmail },
+  });
+
+  if (!existing) {
+    const admin = await prisma.user.create({
+      data: {
+        name: "Samyog Budhathoki",
+        email: adminEmail,
+        password: hashedPassword,
+        role: "ADMIN",
+        wallet: {
+          create: {
+            balance: 1000000, // Rs. 10,000.00
+          },
+        },
+      },
+    });
+    console.log(`Created Admin user: ${admin.email} (Role: ADMIN, Balance: Rs. 10,000.00) 👑`);
+  } else {
+    await prisma.user.update({
+      where: { email: adminEmail },
+      data: {
+        role: "ADMIN",
+        password: hashedPassword,
+      },
+    });
+    console.log(`Admin user updated: ${adminEmail} (Role: ADMIN) 👑`);
+  }
+}
+
 export async function seedProducts() {
   console.log("Seeding Free Fire Bangladesh initial catalogue...");
 
@@ -136,10 +173,15 @@ export async function seedProducts() {
   console.log("Product seeding complete! 🌱");
 }
 
+async function main() {
+  await seedAdmin();
+  await seedProducts();
+}
+
 if (process.env.NODE_ENV !== "test") {
-  seedProducts()
+  main()
     .catch((err) => {
-      console.error("Failed to seed products:", err);
+      console.error("Failed to seed database:", err);
       process.exit(1);
     });
 }
